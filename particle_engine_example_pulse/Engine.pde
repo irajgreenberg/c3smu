@@ -5,6 +5,9 @@
  * Processing for Flash Developers,
  * Friends of ED, 2009
  */
+ 
+import javax.sound.midi.*; 
+import java.util.List; // for lists of MIDI devices obtained by MidiUtils
 
 class Engine {
 
@@ -12,8 +15,15 @@ class Engine {
   Emitter emitter;
   Emitter[] emitters;
   Collider[] colliders;
+  
+  // MIDI setup  
+  int outDevNum = 0; // this will not always be the same on all machines. Always check device numbers when running on another system!
+  MidiDevice outDev; 
+  int chan = 0; // current channel, to be rotated as we go to minimize distortion/artifacts of duplicate pitches on the same channel
+  int maxVol = 50; // needs to be low to avoid overloading the synthesizer (better to use 20 for other synths with a long decay)
+  int movementRate = 1; // how many pixels a collider can move.
  
- // create default environment
+  // create default environment
   Environment environment = new Environment();
 
   // engine states
@@ -25,6 +35,7 @@ class Engine {
 
   // default constructor
   Engine(){
+    setupMidi();
   }
 
   // constructor
@@ -32,6 +43,7 @@ class Engine {
     this.emitter = emitter;
     this.environment = environment;
     init();
+    setupMidi();
     pushEnvironment();
   }
 
@@ -39,6 +51,7 @@ class Engine {
   Engine(Emitter[] emitters, Environment environment){
     this.emitters = emitters;
     this.environment = environment;
+    setupMidi();
     pushEnvironment();
   }
 
@@ -48,6 +61,7 @@ class Engine {
     this.colliders = colliders;
     this.environment = environment;
     init();
+    setupMidi();
     pushEnvironment();
   }
 
@@ -56,7 +70,40 @@ class Engine {
     this.emitters = emitters;
     this.colliders = colliders;
     this.environment = environment;
+    setupMidi();
     pushEnvironment();
+  }
+  
+  // to be called before any sound production happens
+  private void setupMidi(){ 
+    try{
+      List<MidiDevice> outDevs = MidiUtils.getOutputDevices();
+      outDev = outDevs.get(outDevNum);
+      print(outDev.getDeviceInfo().getName());
+      outDev.open();
+    } catch (Exception e) {
+      println(e.getMessage()); 
+    }
+  }
+  
+  // to be called whenever a sound needs to happen at a particular pitch number (pnum)
+  private void sendPitch(int pnum, float volScale) {
+    println(volScale);
+    int vol = round(maxVol * volScale);
+    try {
+      ShortMessage shortMessage = new ShortMessage();
+      shortMessage.setMessage(ShortMessage.NOTE_ON, chan, pnum, vol);
+      outDev.getReceiver().send(shortMessage, -1);
+      ShortMessage shortMessage2 = new ShortMessage();
+      shortMessage2.setMessage(ShortMessage.NOTE_OFF, chan, pnum, vol);
+      outDev.getReceiver().send(shortMessage, -1);
+      chan = chan+1; // minimize the chance of overlapping pitches on the same channel
+      if(chan >=16) {
+         chan = 0; 
+      }
+    } catch (Exception e) {  
+      println(e.getMessage());
+    }
   }
 
   // If only 1 emitter added to engine, 
@@ -87,7 +134,28 @@ class Engine {
       for (int i=0; i<colliders.length; i++){
         colliders[i].create();
       }
-    }   
+    } 
+    
+    // move the colliders around
+    for (int k=0; k<colliders.length; k++){
+      jitter(colliders[k]);
+    }
+  }
+  
+  void jitter(Collider c) {
+    c.loc.x = fixBounds(0, width, c.loc.x + random(-movementRate, movementRate));
+    c.loc.y = fixBounds(0, height, c.loc.y + random(-movementRate, movementRate));
+  }
+  
+  float fixBounds(float lower, float upper, float value) {
+    if (value < lower) {
+      return lower;
+    } else 
+    if (value > upper) {
+      return upper;
+    } else {
+      return value;
+    }
   }
 
   void setColliderCollision(boolean isColliderCollision){
@@ -159,6 +227,7 @@ class Engine {
           for (int k=0; k<colliders.length; k++){
             Collider cldr = colliders[k];
             if (dist(part.loc.x, part.loc.y, cldr.loc.x, cldr.loc.y) < part.radius + cldr.radius){
+              sendPitch(colliders[k].pitch, emitters[i].p[j].colA/255.0); // send out a MIDI event when a collision happens
               cldr.pulse();
               // set particle to collider bounds to avoid overlap
               correctEdgeOverlap(emitters[i].p[j], cldr, emitters[i].loc);

@@ -11,6 +11,7 @@
   // use to control collider visibility
   boolean isRendered;
   float pulseMag = 0;
+  int pitch = 60; // the collider has a pitch associated with it 
   
 
   // default constructor

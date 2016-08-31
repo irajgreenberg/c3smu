@@ -6,9 +6,9 @@
  */
  
  // create particle populations
-int particleCount = 10;
+int particleCount = 2;
 int colliderCount = 50;
-int emitterCount = 18;
+int emitterCount = 8;
 
 // instantiate particle multidimensional arrays
 Particle[][] arrows = new Arrow[emitterCount][particleCount];
@@ -19,6 +19,8 @@ Emitter[] emitters = new Emitter[emitterCount];
 // declare rest of global variables
 Environment environment;
 Engine engine;
+//                        C  C  C  C  G  G  C  D  Ef F  G  Af Bf C  G
+int[] pitches = new int[]{36,36,48,48,55,55,60,62,63,65,67,68,70,72,79}; // an array of pitch numbers to pick from uniformly at random
 
 void setup(){
   size(800, 600, P2D);
@@ -28,6 +30,7 @@ void setup(){
    // instantiate colliders
   for (int i=0; i<colliderCount; i++){
     colliders[i] = new Collider(new PVector(random(width), random(height)), 4, #323332, true);
+    colliders[i].pitch = pitches[floor(random(0,pitches.length))]; // pick a pitch for the current collider
   }
   float theta = 0;
   float px = 0, py = 0;
