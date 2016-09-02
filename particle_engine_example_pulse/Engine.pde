@@ -17,7 +17,7 @@ class Engine {
   Collider[] colliders;
   
   // MIDI setup  
-  int outDevNum = 0; // this will not always be the same on all machines. Always check device numbers when running on another system!
+  int outDevNum = 1; // this will not always be the same on all machines. Always check device numbers when running on another system!
   MidiDevice outDev; 
   int chan = 0; // current channel, to be rotated as we go to minimize distortion/artifacts of duplicate pitches on the same channel
   int maxVol = 50; // needs to be low to avoid overloading the synthesizer (better to use 20 for other synths with a long decay)
@@ -98,7 +98,10 @@ class Engine {
       shortMessage2.setMessage(ShortMessage.NOTE_OFF, chan, pnum, vol);
       outDev.getReceiver().send(shortMessage, -1);
       chan = chan+1; // minimize the chance of overlapping pitches on the same channel
-      if(chan >=16) {
+      //if(chan==9){
+      //  chan = chan+1;
+      //}
+      if(chan >=9) {
          chan = 0; 
       }
     } catch (Exception e) {  

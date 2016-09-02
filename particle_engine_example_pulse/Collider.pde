@@ -38,10 +38,10 @@
       ellipse(0, 0, radius*2+pulseMag, radius*2 + pulseMag);
       popMatrix();
     }
-    pulseMag *= .875;
+    pulseMag *= .975;
   }
   
   void pulse(){
-    pulseMag = 30;
+    pulseMag = 60;
   }
 }
