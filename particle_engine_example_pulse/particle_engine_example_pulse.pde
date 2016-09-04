@@ -6,31 +6,48 @@
  */
 
 // create particle populations
-int particleCount = 5;
+boolean sparseMode = false; // set to true to make testing easier on a laptop with a small screen
+boolean quietMode = true;
+int particleCount = 3;
 int colliderCount = 500;
-int emitterCount = 8;
+int emitterCount = 5;
 
 // instantiate particle multidimensional arrays
-Particle[][] arrows = new Arrow[emitterCount][particleCount];
+Particle[][] arrows;
 // instantiate collider arrays
-Collider[] colliders = new Collider[colliderCount];
+Collider[] colliders;
 // instantiate emitter arrays
-Emitter[] emitters = new Emitter[emitterCount];
+Emitter[] emitters;
 // declare rest of global variables
 Environment environment;
 Engine engine;
 //                        C  C  C  C  G  G  C  D  Ef F  G  Af Bf C  G
-int[] pitches = new int[]{36, 36, 48, 48, 55, 55, 60, 62, 63, 65, 67, 68, 70, 72, 79}; // an array of pitch numbers to pick from uniformly at random
+int[] pitches = new int[]{36, 36, 36, 48, 48, 48, 55, 55, 60, 62, 63, 65, 67, 68, 70, 72, 79}; // an array of pitch numbers to pick from uniformly at random
+int minPitch = 36;
+int maxPitch = 79;
 
 void setup() {
   size(3840, 2160, P2D);
   background(0);
   smooth();
+  
+  // debug mode settings
+  if (sparseMode) {
+    particleCount = 5;
+    colliderCount = 30;
+    emitterCount = 5;
+  }
+  
+  arrows = new Arrow[emitterCount][particleCount];
+  colliders = new Collider[colliderCount];
+  emitters = new Emitter[emitterCount];
 
   // instantiate colliders
   for (int i=0; i<colliderCount; i++) {
-    colliders[i] = new Collider(new PVector(random(width), random(height)), 4, #323332, true);
-    colliders[i].pitch = pitches[floor(random(0, pitches.length))]; // pick a pitch for the current collider
+    //colliders[i] = new Collider(new PVector(random(width), random(height)), 4, #323332, true);
+    int p = pitches[floor(random(0, pitches.length))];
+    color c = pitchToColor(p);
+    colliders[i] = new Collider(new PVector(random(width), random(height)), 4, c, true, p);
   }
   float theta = 0;
   float px = 0, py = 0;
@@ -54,6 +71,7 @@ void setup() {
   //set boundary collisions
   boolean[] bounds =  {true, true, true, false};
   engine.setBoundaryCollision(true, bounds);
+  engine.mh.quietMode = quietMode;
 }
 
 void draw() {
@@ -63,4 +81,25 @@ void draw() {
   rect(-1, -1, width+2, height+2);
   // required to make engine do its thing
   engine.run();
+}
+
+/*
+Pitch to color translation function. Low pitches will be red, middle will be blue, and high will be green.
+*/
+color pitchToColor(int pnumIn) {
+  float pnum = 127 * ((float)(pnumIn - minPitch) / (maxPitch-minPitch)); // if not using whole MIDI range, maximize the range of 0-127 used
+  float r = 0;
+  float g = 0;
+  float b = 0;
+  if(pnum <= 64) {
+    r = 255 * ((64 - pnum)/64);
+    b = 255 * (pnum/64);
+    g = 0;
+  } else {
+    r = 0;
+    b = 255 * ((64 - ((float)pnum - 64))/64);
+    g = 255 * ((float)(pnum - 64)/64);
+  }
+  color c = color(r,g,b);
+  return c;
 }

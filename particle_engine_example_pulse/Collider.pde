@@ -24,6 +24,13 @@
     this.isRendered = isRendered;
   }
   
+    // constructor - smooth circle
+  Collider(PVector loc, float radius, color col, boolean isRendered, int pitchNum){
+    super(loc, radius, col);
+    this.isRendered = isRendered;
+    this.pitch = pitchNum;
+  }
+  
   void create(){
     noStroke();
     // only draw if true

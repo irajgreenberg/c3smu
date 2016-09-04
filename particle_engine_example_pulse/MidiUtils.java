@@ -187,4 +187,67 @@ public final class MidiUtils {
       int[] intArray = new int[]{s,c,d1,d2};
       return intArray;
     }
+    
+    static public void sendMessage(MidiDevice outDev, MidiMessage message, long timestamp) {
+      try {
+        outDev.getReceiver().send(message,timestamp); 
+      } catch (Exception e) {
+        System.err.println(e.getMessage()); 
+      }
+    }
+    
+    static public void sendMessage(MidiDevice outDev, MidiMessage message) {
+      sendMessage(outDev, message, -1);
+    }
+    
+    static public void sendMessage(MidiDevice outDev, MidiMessage message, int timestamp) {
+      sendMessage(outDev, message, (long)timestamp); 
+    }
+    
+    static public void noteOn(MidiDevice outDev, int channel, int pitch, int volume, long timestamp) {
+      try {
+        ShortMessage shortMessage = new ShortMessage();
+        shortMessage.setMessage(ShortMessage.NOTE_ON, channel, pitch, volume);
+        sendMessage(outDev, shortMessage, timestamp);
+      } catch (Exception e) {
+        System.err.println(e.getMessage()); 
+      }
+    }
+    
+    static public void noteOn(MidiDevice outDev, int channel, int pitch, int volume) {
+      noteOn(outDev, channel, pitch, volume, -1); 
+    }
+    
+    static public void noteOff(MidiDevice outDev, int channel, int pitch, int volume, long timestamp) {
+      try {
+        ShortMessage shortMessage = new ShortMessage();
+        shortMessage.setMessage(ShortMessage.NOTE_OFF, channel, pitch, volume);
+        sendMessage(outDev, shortMessage, timestamp);
+      } catch (Exception e) {
+        System.err.println(e.getMessage()); 
+      }
+    }
+    
+    static public void noteOff(MidiDevice outDev, int channel, int pitch, long timestamp) {
+      noteOff(outDev, channel, pitch, 0, timestamp);
+    }
+    
+    static public void noteOff(MidiDevice outDev, int channel, int pitch) {
+      noteOff(outDev, channel, pitch, 0, -1);
+    }
+    
+    static public void noteOff(MidiDevice outDev, int channel, int pitch, int volume) {
+      noteOff(outDev, channel, pitch, volume, -1); 
+    }
+    
+    static public void playNote(MidiDevice outDev, int channel, int pitch, int volume, long duration) {
+      long t = outDev.getMicrosecondPosition();
+      noteOn(outDev, channel, pitch, volume, t);
+      noteOff(outDev, channel, pitch, volume, duration);
+    }
+    
+    static public void playNote(MidiDevice outDev, int channel, int pitch, int volume, float durationSeconds) {
+      long durationMSec = Math.round(durationSeconds * 1000000);
+      playNote(outDev, channel, pitch, volume, durationMSec);
+    }
 }
