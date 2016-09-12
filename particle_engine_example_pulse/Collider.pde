@@ -35,10 +35,10 @@
     noStroke();
     // only draw if true
     if (isRendered){
-      float r = red(col);
-      float g = green(col);
-      float b = blue(col);
-      color c = color(r+pulseMag, g, b);
+      float r = fPulse(red(col), pulseMag);
+      float g = fPulse(green(col), pulseMag);
+      float b = fPulse(blue(col), pulseMag);
+      color c = color(r, g, b);
       fill(c);
       pushMatrix();
       translate(loc.x, loc.y);
@@ -46,6 +46,10 @@
       popMatrix();
     }
     pulseMag *= .975;
+  }
+  
+  float fPulse(float v, float p) {
+    return (v*p*0.8)+(0.2*255);
   }
   
   void pulse(){
